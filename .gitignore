@@ -1,0 +1,14 @@
+*.axf
+*.a
+*.o
+*.map
+*.lst
+*.lnp
+*.icf
+*.build_log.htm
+*.htm
+*.hex
+*.dep
+*.0.0.dbgconf
+*.d
+*.crf
