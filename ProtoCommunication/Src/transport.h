@@ -10,6 +10,9 @@
 extern "C" {
 #endif
 
+#define DATA_LEN_LENGTH 2
+#define MESSAGE_ID_LENGTH 2
+
 typedef enum{
 	TRP_READ_RX_BUFFER_ERROR = 1,
 	TRP_READ_TX_BUFFER_ERROR = 2,

@@ -14,7 +14,6 @@ extern "C" {
 
 void ApplProto_Initialise(void);
 void ApplProto_Process(void);
-void ApplProto_OnUsbReceivedData(uint8_t* _data, uint32_t _len);
 void ApplProto_TxCmpltClbk(ProtoTransportP pr);
 void ApplProto_RxCmpltClbk(ProtoTransportP pr);
 void ApplProto_ErrorClbk(ProtoTransportP pr);

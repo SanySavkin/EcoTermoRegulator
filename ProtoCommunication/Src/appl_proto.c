@@ -13,10 +13,10 @@ extern ProtoTransport_t protoUart;
 
 static uint8_t tempBufUartReceive;
 static CyclicBuffer cBufUartRx;
-static uint8_t cBufBufferUsbRx[512];
+static uint8_t cBufBufferUsbRx[256];
 
 static CyclicBuffer cBufUartTx;
-static uint8_t cBufBufferUsbTx[512];
+static uint8_t cBufBufferUsbTx[256];
 
 //private functions declaration begin
 static void ProtoUsbInit(void);
@@ -52,9 +52,10 @@ void ApplProto_Process(void){
 	ProtoTransp_Process(&protoUart);
 }
 volatile uint32_t debugDataCount = 0;
-void ApplProto_OnUsbReceivedData(uint8_t* _data, uint32_t _len){
-	debugDataCount += _len;
-	ProtoTransp_ReceiveData(&protoUart, _data, _len);
+void ApplProto_RxCmpltClbk(ProtoTransportP pr){
+	debugDataCount += pr->len;
+	ProtoTransp_ReceiveData(&protoUart, &tempBufUartReceive, 1);
+	HAL_UART_Receive_IT(&huart1, &tempBufUartReceive, 1);
 }
 
 void ApplProto_TxCmpltClbk(ProtoTransportP pr){
@@ -265,11 +266,6 @@ static bool Mutex(ProtoTransportP pr, bool _lock){
 	return false;
 }
 //PrTrInterface_t interface implementation end
-
-void ApplProto_RxCmpltClbk(ProtoTransportP pr){
-	pr->itf.writeRx(pr, &tempBufUartReceive, 1);
-	HAL_UART_Receive_IT(&huart1, &tempBufUartReceive, 1);
-}
 
 void ApplProto_ErrorClbk(ProtoTransportP pr){
 	HAL_UART_Abort_IT(&huart1);

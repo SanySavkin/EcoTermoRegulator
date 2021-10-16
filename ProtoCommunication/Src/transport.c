@@ -1,14 +1,13 @@
 #include "transport.h"
 
 
-#define DATA_LEN_LENGTH 4
-#define MESSAGE_ID_LENGTH 4
+
 #define FRAME_SERVICE_LENGTH MESSAGE_ID_LENGTH
 
 #define LOCK
 #define UNLOCK
 
-static uint8_t bufRx[1024];
+static uint8_t bufRx[256];
 
 
 //private functions declaration begin 

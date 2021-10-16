@@ -3,38 +3,36 @@
 #include "main.h"
 
 
-#define MSG_ID_BASE 0x12340U
+#define MSG_ID_BASE 0x1U
 
 
 typedef enum{
-	MSG_ID_WRITE_START = MSG_ID_BASE,
-	MSG_ID_WRITE_START_REPLY,
-	MSG_ID_WRITE,
-	MSG_ID_WRITE_REPLY,
-	MSG_ID_WRITE_END,
-	MSG_ID_WRITE_END_REPLY,
+	MSG_ID_SETTINGS = MSG_ID_BASE,
+	MSG_ID_START_STOP,
+	MSG_ID_SET_POSITION,
+	MSG_ID_SYNCHRONIZE,
 	MSG_ID_ERROR,
-	MSG_ID_GET_FLASH_TYPE,
-	MSG_ID_WRITE_FOLDER,
-	MSG_ID_SPIFFS_SETTINGS,
 	MSG_ID_PING,
-	MSG_ID_CREATE_IMAGE,
 }MesagesId_t;
 
 
 static void DispatchMessage(ProtoTransportP, uint8_t*, uint32_t);
 
 
-bool SendMes_WriteFileStartReply(ProtoTransportP pr, MsgWriteStart_t* msg){
-	return ProtoTransp_Send(pr, MSG_ID_WRITE_START_REPLY, (uint8_t*)msg, sizeof(MsgWriteStart_t) - sizeof(MsgDataStream), msg->fileName.ptr, msg->fileName.len);
+bool SendMes_Settings(ProtoTransportP pr, MsgSettings_t* msg){
+	return ProtoTransp_Send(pr, MSG_ID_SETTINGS, (uint8_t*)msg, sizeof(MsgSettings_t), NULL, 0);
 }
 
-bool SendMes_WriteFileReply(ProtoTransportP pr, MsgWriteReply_t* msg){
-	return ProtoTransp_Send(pr, MSG_ID_WRITE_REPLY, (uint8_t*)msg,  sizeof(MsgWriteReply_t), NULL, 0);
+bool SendMes_Start(ProtoTransportP pr, MsgStart_t* msg){
+	return ProtoTransp_Send(pr, MSG_ID_START_STOP, (uint8_t*)msg, sizeof(MsgStart_t), NULL, 0);
 }
 
-bool SendMes_WriteFileEndReply(ProtoTransportP pr, MsgWriteEnd_t* msg){
-	return ProtoTransp_Send(pr, MSG_ID_WRITE_END_REPLY, (uint8_t*)msg->hashSum.ptr,  msg->hashSum.len, NULL, 0);
+bool SendMes_SetPosition(ProtoTransportP pr, MsgSetPosition_t* msg){
+	return ProtoTransp_Send(pr, MSG_ID_SET_POSITION, (uint8_t*)msg, sizeof(MsgSetPosition_t), NULL, 0);
+}
+
+bool SendMes_Synchronize(ProtoTransportP pr, MsgSynchronize_t* msg){
+	return ProtoTransp_Send(pr, MSG_ID_SYNCHRONIZE, (uint8_t*)msg,  sizeof(MsgSynchronize_t), NULL, 0);
 }
 
 bool SendMes_Error(ProtoTransportP pr, MsgError_t* msg){
@@ -60,49 +58,39 @@ static bool Parse(void* _msg, uint32_t _lenFixed, bool _isStream, uint8_t* _data
 }
 
 static void DispatchMessage(ProtoTransportP pr, uint8_t* _data, uint32_t _len){
-	uint8_t* msgBegin = _data + 4;
-	uint32_t messageLen = _len - 4; //without msgId
+	uint8_t* msgBegin = _data + MESSAGE_ID_LENGTH;
+	uint32_t messageLen = _len - MESSAGE_ID_LENGTH; //without msgId
 	switch (*(uint32_t*)_data)
     {
-    	case MSG_ID_WRITE_START:
+    	case MSG_ID_START_STOP:
 			{
-				MsgWriteStart_t msg;
-				if(Parse(&msg, sizeof(MsgWriteStart_t) - sizeof(MsgDataStream), true, msgBegin, messageLen)){
-					OnMessageWriteStartReceived(pr, &msg);
+				MsgStart_t msg;
+				if(Parse(&msg, sizeof(MsgStart_t), false, msgBegin, messageLen)){
+					OnMessageStartReceived(pr, &msg);
 				}
 			}
     		break;
-    	case MSG_ID_WRITE:
+    	case MSG_ID_SETTINGS:
 			{
-				MsgWrite_t msg;
-				if(Parse(&msg, sizeof(MsgWrite_t) - sizeof(MsgDataStream), true, msgBegin, messageLen)){
-					OnMessageWriteReceived(pr, &msg);
+				MsgSettings_t msg;
+				if(Parse(&msg, sizeof(MsgSettings_t), false, msgBegin, messageLen)){
+					OnMessageSettingsReceived(pr, &msg);
 				}
 			}
     		break;
-		case MSG_ID_WRITE_END:
+		case MSG_ID_SET_POSITION:
 			{
-				MsgWriteEnd_t msg;
-				if(Parse(&msg, sizeof(MsgWriteEnd_t) - sizeof(MsgDataStream), true, msgBegin, messageLen)){
-					OnMessageWriteEndReceived(pr, &msg);
+				MsgSetPosition_t msg;
+				if(Parse(&msg, sizeof(MsgSetPosition_t), false, msgBegin, messageLen)){
+					OnMessageSetPositionReceived(pr, &msg);
 				}
 			}
 			break;
-		case MSG_ID_WRITE_FOLDER:
+		case MSG_ID_SYNCHRONIZE:
 			{
-				MsgCopyFolder_t msg;
-				if(Parse(&msg, sizeof(MsgCopyFolder_t) - sizeof(MsgDataStream), true, msgBegin, messageLen)){
-					OnMessageCopyFolderReceived(pr, &msg);
-				}
-			}
-			break;
-		case MSG_ID_GET_FLASH_TYPE:
-			break;
-		case MSG_ID_SPIFFS_SETTINGS:
-			{
-				MsgSpiffsSettings_t msg;
-				if(Parse(&msg, sizeof(MsgSpiffsSettings_t), false, msgBegin, messageLen)){
-					OnMessageSpiffsSettingsReceived(pr, &msg);
+				MsgSynchronize_t msg;
+				if(Parse(&msg, sizeof(MsgSynchronize_t), false, msgBegin, messageLen)){
+					OnMessageSynchronizeReceived(pr, &msg);
 				}
 			}
 			break;
@@ -114,23 +102,13 @@ static void DispatchMessage(ProtoTransportP pr, uint8_t* _data, uint32_t _len){
 				}
 			}
 			break;
-		case MSG_ID_CREATE_IMAGE:
-			{
-				MsgCreateImage_t msg;
-				if(Parse(&msg, sizeof(MsgCreateImage_t) - sizeof(MsgDataStream), true, msgBegin, messageLen)){
-					OnMessageCreateImageReceived(pr, &msg);
-				}
-			}
-			break;
     	default:
     		break;
     }
 }
 
-__weak void OnMessageWriteStartReceived(ProtoTransportP pr, MsgWriteStart_t* msg){UNUSED(pr);UNUSED(msg);}
-__weak void OnMessageWriteReceived(ProtoTransportP pr, MsgWrite_t* msg){UNUSED(pr);UNUSED(msg);}
-__weak void OnMessageCopyFolderReceived(ProtoTransportP pr, MsgCopyFolder_t* msg){UNUSED(pr);UNUSED(msg);}
-__weak void OnMessageWriteEndReceived(ProtoTransportP pr, MsgWriteEnd_t* msg){UNUSED(pr);UNUSED(msg);}
-__weak void OnMessageSpiffsSettingsReceived(ProtoTransportP pr, MsgSpiffsSettings_t* msg){UNUSED(pr);UNUSED(msg);}
+__weak void OnMessageStartReceived(ProtoTransportP pr, MsgStart_t* msg){UNUSED(pr);UNUSED(msg);}
+__weak void OnMessageSettingsReceived(ProtoTransportP pr, MsgSettings_t* msg){UNUSED(pr);UNUSED(msg);}
+__weak void OnMessageSynchronizeReceived(ProtoTransportP pr, MsgSynchronize_t* msg){UNUSED(pr);UNUSED(msg);}
+__weak void OnMessageSetPositionReceived(ProtoTransportP pr, MsgSetPosition_t* msg){UNUSED(pr);UNUSED(msg);}
 __weak void OnMessagePingReceived(ProtoTransportP pr, MsgPing_t* msg){UNUSED(pr);UNUSED(msg);}
-__weak void OnMessageCreateImageReceived(ProtoTransportP pr, MsgCreateImage_t* msg){UNUSED(pr);UNUSED(msg);}

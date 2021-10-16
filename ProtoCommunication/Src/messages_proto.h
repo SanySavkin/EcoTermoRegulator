@@ -12,8 +12,6 @@ extern "C" {
 #endif
 
 
-#define FILE_NAME_LEN_MAX 32
-
 typedef enum{
 	GLOB_ERR_NONE = 0,
 	GLOB_ERR_ALLOCATE_MEMORY = 1,
@@ -39,70 +37,65 @@ typedef struct{
 	uint32_t len;
 }MsgDataStream;
 
+//s2c
 typedef struct{
-	uint32_t fileSize;
-	MsgDataStream fileName;
-}MsgWriteStart_t; //Msg_WriteStartReply_t too
+	uint32_t delayBefore; 	//опережение закрытия клапана перед выходом счетчика из энергосберегающего режима.
+	uint32_t delayAfter;	//задержка открытия клапана после входа счетчика в энергосберегающий режим.
+	uint32_t durationOn;	//продолжительность открытого клапана.
+	uint32_t cycleCount;	//число пропуска периодов (если 0, то открытие клапана каждый период).
+	uint32_t milisKPer;		//milisKPer = T * 1000; например, если период = 8сек, то milisKPer = 8000 * 1000;
+	uint32_t workTime;		//время работы.
+	bool isOpenWhenStopped;	//положение клапана после истечения workTime. if(isOpenWhenStopped) клапан открыт; else клапан закрыт.
+}MsgSettings_t;
 
+//c2s
 typedef struct{
-	uint32_t ofset;
-	MsgDataStream data;
-}MsgWrite_t;
+	uint16_t position;	//градусы в минутах.
+	bool isWork;
+}MsgStatus_t;
 
+//s2c
 typedef struct{
-	MsgDataStream data;
-}MsgCopyFolder_t;
+	uint16_t position;	//градусы в минутах.
+}MsgSetPosition_t;
 
+//s2c c2s
 typedef struct{
-	uint32_t len;
-	uint32_t ofset;
-}MsgWriteReply_t;
+	uint32_t startTime;	//количество милисекунд до следующей точки синхронизации.
+}MsgSynchronize_t;
 
+//s2c
 typedef struct{
-	MsgDataStream hashSum;
-}MsgWriteEnd_t; //Msg_WriteEndReply_t too
+	bool isStart;	//if(isStart) start; else stop;
+}MsgStart_t;
 
-typedef struct{
-	uint32_t flashSize;
-	uint32_t spiffsAddr;
-	uint32_t eraseSize;
-	uint32_t pageSize;
-	uint32_t logBlockSize;
-	bool allowFormating;
-}MsgSpiffsSettings_t;
-
+//c2s
 typedef struct{
 	uint32_t errorCode;
 }MsgError_t;
 
+//s2c c2s
 typedef struct{
 	uint32_t senderId;
 }MsgPing_t;
 
-typedef struct{
-	MsgDataStream fileName;
-}MsgCreateImage_t;
-
 //#pragma pack(pop)
 
 
-void MessagesProtoInitialise(void);
-void OnWriteReceived(char* _data);
+bool SendMes_Settings(ProtoTransportP pr, MsgSettings_t* msg);
+bool SendMes_Start(ProtoTransportP pr, MsgStart_t* msg);
+bool SendMes_SetPosition(ProtoTransportP pr, MsgSetPosition_t* msg);
+bool SendMes_Synchronize(ProtoTransportP pr, MsgSynchronize_t* msg);
 
-bool SendMes_WriteFileStartReply(ProtoTransportP pr, MsgWriteStart_t* msg);
-bool SendMes_WriteFileReply(ProtoTransportP pr, MsgWriteReply_t* msg);
-bool SendMes_WriteFileEndReply(ProtoTransportP pr, MsgWriteEnd_t* msg);
 bool SendMes_Error(ProtoTransportP pr, MsgError_t* msg);
 bool SendMes_Ping(ProtoTransportP pr, MsgPing_t* msg);
 
-void OnMessageWriteReceived(ProtoTransportP pr, MsgWrite_t* msg);
-void OnMessageWriteStartReceived(ProtoTransportP pr, MsgWriteStart_t* msg);
-void OnMessageCopyFolderReceived(ProtoTransportP pr, MsgCopyFolder_t* msg);
-void OnMessageWriteEndReceived(ProtoTransportP pr, MsgWriteEnd_t* msg);
-void OnMessageSpiffsSettingsReceived(ProtoTransportP pr, MsgSpiffsSettings_t* msg);
-void OnMessagePingReceived(ProtoTransportP pr, MsgPing_t* msg);
-void OnMessageCreateImageReceived(ProtoTransportP pr, MsgCreateImage_t* msg);
 
+void OnMessageStartReceived(ProtoTransportP pr, MsgStart_t* msg);
+void OnMessageSettingsReceived(ProtoTransportP pr, MsgSettings_t* msg);
+void OnMessageSynchronizeReceived(ProtoTransportP pr, MsgSynchronize_t* msg);
+void OnMessageSetPositionReceived(ProtoTransportP pr, MsgSetPosition_t* msg);
+void OnMessagePingReceived(ProtoTransportP pr, MsgPing_t* msg);
 
 
 #ifdef __cplusplus
