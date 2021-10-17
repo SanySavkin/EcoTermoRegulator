@@ -43,25 +43,29 @@ typedef struct{
 	uint32_t delayAfter;	//задержка открытия клапана после входа счетчика в энергосберегающий режим.
 	uint32_t durationOn;	//продолжительность открытого клапана.
 	uint32_t cycleCount;	//число пропуска периодов (если 0, то открытие клапана каждый период).
-	uint32_t milisKPer;		//milisKPer = T * 1000; например, если период = 8сек, то milisKPer = 8000 * 1000;
-	uint32_t workTime;		//время работы.
-	bool isOpenWhenStopped;	//положение клапана после истечения workTime. if(isOpenWhenStopped) клапан открыт; else клапан закрыт.
+	uint32_t period;		//периоде цикла, мсек;
+	uint32_t activeTime;	//время работы, ms.
+	uint16_t angleOn;		//угол, при котором клапан полностью открыт (минуты).
+	uint16_t angleOff;		//угол, при котором клапан полностью закрыт (минуты).
+	uint8_t valveStepPer;	//период (в милисек) одного шага (в процентах) клапана; Необходимо для плавного нажатия и отжатия клапана;
+	bool isOpenWhenStopped;	//положение клапана после истечения activeTime. if(isOpenWhenStopped) клапан открыт; else клапан закрыт.
 }MsgSettings_t;
 
 //c2s
 typedef struct{
-	uint16_t position;	//градусы в минутах.
-	bool isWork;
+	uint32_t closePosition; 	//значение в минутах, когда клапан закрыт полностью.
+	uint16_t currentPosition;	//угол в минутах.
+	bool isActive;				//основной цикл работы активен?
 }MsgStatus_t;
 
 //s2c
 typedef struct{
-	uint16_t position;	//градусы в минутах.
+	uint16_t position;	//угол в минутах.
 }MsgSetPosition_t;
 
-//s2c c2s
+//s2c c2s (s2c - во время события "измерение" + delayAfter; c2s - во время открытия клапана)
 typedef struct{
-	uint32_t startTime;	//количество милисекунд до следующей точки синхронизации.
+	uint32_t id; 	//identifier
 }MsgSynchronize_t;
 
 //s2c

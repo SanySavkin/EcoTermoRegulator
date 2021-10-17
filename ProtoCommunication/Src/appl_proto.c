@@ -19,7 +19,7 @@ static CyclicBuffer cBufUartTx;
 static uint8_t cBufBufferUsbTx[256];
 
 //private functions declaration begin
-static void ProtoUsbInit(void);
+static void ProtoUartInit(void);
 
 static bool GetDataForRead(ProtoTransportP, uint8_t** data, uint32_t* len);
 static int32_t WriteRx(ProtoTransportP pr, uint8_t* data, uint32_t len);
@@ -45,7 +45,7 @@ static bool Mutex(ProtoTransportP, bool);
 
 
 void ApplProto_Initialise(void){
-	ProtoUsbInit();
+	ProtoUartInit();
 }
 uint32_t data[10] = {0x12340, 0x37, 0x2C, 0x1};
 void ApplProto_Process(void){
@@ -62,7 +62,7 @@ void ApplProto_TxCmpltClbk(ProtoTransportP pr){
 	ProtoTransp_TxCompleteClbk(pr, pr->data, &pr->len);
 }
 
-static void ProtoUsbInit(void){
+static void ProtoUartInit(void){
 	CBufInit(&cBufUartRx, cBufBufferUsbRx, sizeof(cBufBufferUsbRx));
 	CBufInit(&cBufUartTx, cBufBufferUsbTx, sizeof(cBufBufferUsbTx));
 	

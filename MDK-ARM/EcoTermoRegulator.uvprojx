@@ -339,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F103x6</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;../Drivers/STM32F1xx_HAL_Driver/Inc;../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32F1xx/Include;../Drivers/CMSIS/Include;..\..\EcoTermoRegulator</IncludePath>
+              <IncludePath>../Core/Inc;   ../Drivers/STM32F1xx_HAL_Driver/Inc;   ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy;   ../Drivers/CMSIS/Device/ST/STM32F1xx/Include;   ../Drivers/CMSIS/Include;   ..\..\EcoTermoRegulator</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -527,6 +527,26 @@
               <FileName>md5.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Developer\Src\md5.c</FilePath>
+            </File>
+            <File>
+              <FileName>dev_helper.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Developer\Src\dev_helper.c</FilePath>
+            </File>
+            <File>
+              <FileName>m_timer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Developer\Src\m_timer.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Logic</GroupName>
+          <Files>
+            <File>
+              <FileName>logic .c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Logic\Src\logic .c</FilePath>
             </File>
           </Files>
         </Group>
