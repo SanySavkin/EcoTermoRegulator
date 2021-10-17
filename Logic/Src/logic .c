@@ -7,8 +7,8 @@
 
 
 //зависит от требуемого сигнала на входе управления двигателем и используется для установки минимальной и максимальной скважности.
-#define MIN_VALUE_ARR 0		
-#define MAX_VALUE_ARR 999	//must be equal ARR * n, где 0 < n <= 1
+#define MIN_VALUE_ARR 230		
+#define MAX_VALUE_ARR 550 //999	//must be equal ARR * n, где 0 < n <= 1
 
 
 #define MOTOR_DIAPASONE 180	//Градусов
@@ -45,10 +45,22 @@ static uint32_t GetMilliseconds(void){
 	return milliseconds;
 }
 
-static void SetPosition(uint16_t _minutes){
+static void SetPositionByMinutes(uint16_t _minutes){
 	if(_minutes > MAX_VALUE_POSITION) _minutes = MAX_VALUE_POSITION;
 	uint32_t precent = GetPrecentFromValue(_minutes, MAX_VALUE_POSITION);
 	uint32_t val = MIN_VALUE_ARR + GetValueFromPrecent(precent, MAX_VALUE_ARR - MIN_VALUE_ARR);
+	__HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_1, val);
+}
+
+//100% - full open, 0% - full closed
+static void SetPositionByPrecent(uint8_t _prec){
+	uint16_t min = r.set.angleOff > r.set.angleOn ? r.set.angleOn : r.set.angleOff;
+	uint16_t max = r.set.angleOff > r.set.angleOn ? r.set.angleOff : r.set.angleOn;
+	
+	uint16_t maxArr = MIN_VALUE_ARR + (max * (MAX_VALUE_ARR - MIN_VALUE_ARR))/MAX_VALUE_POSITION;
+	uint16_t minArr = MIN_VALUE_ARR + (min * (MAX_VALUE_ARR - MIN_VALUE_ARR))/MAX_VALUE_POSITION;
+	
+	uint32_t val = minArr + GetValueFromPrecent(_prec, maxArr - minArr);
 	__HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_1, val);
 }
 
@@ -61,11 +73,11 @@ static void SetValve(uint8_t _precent){
 }
 //полностью открыть
 static void OpenValve(void){
-	SetValve(100);
+	//SetValve(100);
 }
 //полностью закрыть
 static void CloseValve(void){
-	SetValve(0);
+	//SetValve(0);
 }
 
 static void Work(void){
@@ -91,12 +103,13 @@ static void ValvePositionProcess(void){
 		if(valveCurPos > valveSetPos) 
 			valveCurPos--; 
 		else valveCurPos++;
-		Timer_Reset(&timerValveProcess);
+		Timer_Reset(&timerValveProcess);		
+		SetPositionByPrecent(valveCurPos);
 		
-		uint16_t range = r.set.angleOff > r.set.angleOn ? r.set.angleOff - r.set.angleOn : r.set.angleOn - r.set.angleOff;
-		uint16_t minutes = GetValueFromPrecent(valveCurPos, range);
-		uint16_t minimum = r.set.angleOff > r.set.angleOn ? r.set.angleOn : r.set.angleOff;
-		SetPosition(minimum + minutes);
+//		uint16_t range = r.set.angleOff > r.set.angleOn ? r.set.angleOff - r.set.angleOn : r.set.angleOn - r.set.angleOff;
+//		uint16_t minutes = GetValueFromPrecent(valveCurPos, range);
+//		uint16_t minimum = r.set.angleOff > r.set.angleOn ? r.set.angleOn : r.set.angleOff;
+//		SetPosition(minimum + minutes);
 	}
 }
 
@@ -190,6 +203,6 @@ void OnMessageSynchronizeReceived(ProtoTransportP pr, MsgSynchronize_t* msg){
 }
 
 void OnMessageSetPositionReceived(ProtoTransportP pr, MsgSetPosition_t* msg){
-	SetPosition(msg->position);
+	SetPositionByMinutes(msg->position);
 }
 
