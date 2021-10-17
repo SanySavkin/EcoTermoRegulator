@@ -4,6 +4,8 @@
 
 void Timer_Initialise(PtrTimer_t _tm, Timer_GetMillis _getMillis){
 	_tm->getMillis = _getMillis;
+	_tm->period = 0;
+	_tm->startTime = 0;
 }
 
 void Timer_Start(Timer_t* _tm, uint32_t _periodMillisec){

@@ -45,9 +45,12 @@ typedef struct{
 	uint32_t cycleCount;	//число пропуска периодов (если 0, то открытие клапана каждый период).
 	uint32_t period;		//периоде цикла, мсек;
 	uint32_t activeTime;	//время работы, ms.
+	uint32_t correctPer;	//период коррекции времени, мс;
+	int16_t correctValue;	//значение коррекции времени, мкс; MIN -900, MAX +900;
 	uint16_t angleOn;		//угол, при котором клапан полностью открыт (минуты).
 	uint16_t angleOff;		//угол, при котором клапан полностью закрыт (минуты).
 	uint8_t valveStepPer;	//период (в милисек) одного шага (в процентах) клапана; Необходимо для плавного нажатия и отжатия клапана;
+	
 	bool isOpenWhenStopped;	//положение клапана после истечения activeTime. if(isOpenWhenStopped) клапан открыт; else клапан закрыт.
 }MsgSettings_t;
 

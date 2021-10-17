@@ -20,6 +20,8 @@ typedef struct{
 	uint32_t activeTime;	//время работы, ms.
 	uint16_t angleOn;		//угол, при котором клапан полностью открыт (минуты).
 	uint16_t angleOff;		//угол, при котором клапан полностью закрыт (минуты).
+	uint32_t correctPer;	//период коррекции времени, мс;
+	int16_t correctValue;	//значение коррекции времени, мкс; MIN -900, MAX +900;
 	uint8_t valveStepPer;	//период (в милисек) одного шага (в процентах) клапана; Необходимо для плавного нажатия и отжатия клапана;
 	bool isOpenWhenStopped;	//положение клапана после истечения activeTime. if(isOpenWhenStopped) клапан открыт; else клапан закрыт.
 }RegulatorSettings_t;
@@ -36,6 +38,8 @@ typedef struct{
 void Logic_Process(void);
 void Logic_Initialise(void);
 void Logic_IncrementTime(void);
+int32_t Logic_GetCorrectValue(void);
+void Logic_CorrectTimeCmpltClbk(void);
 
 
 

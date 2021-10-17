@@ -17,7 +17,14 @@
 #define MAX_VALUE_POSITION (MOTOR_DIAPASONE * 60)	//минуты
 
 
-extern TIM_HandleTypeDef htim1;
+//typedef enum{
+//	WAIT_START,
+//	STARTING,
+//	RUN,
+//	
+//}RegulatorState_t;
+
+
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
 
@@ -26,7 +33,9 @@ static Timer_t timerDurationOn;
 static Timer_t timerPeriod;
 static Timer_t timerActiveTime;
 static Timer_t timerValveProcess;
+static Timer_t timerCorrection;
 volatile static uint32_t milliseconds = 0;
+volatile int32_t correctValue = 0;
 
 static uint8_t valveCurPos = 0; //100% - full open, 0% - full closed
 static uint8_t valveSetPos = 0; //100% - full open, 0% - full closed
@@ -91,6 +100,13 @@ static void ValvePositionProcess(void){
 	}
 }
 
+static void CorrectTime(void){
+	if(Timer_IsElapsed(&timerCorrection)){
+		correctValue = r.set.correctValue;
+		Timer_Restart(&timerCorrection);
+	}
+}
+
 void Logic_Process(void){
 	ValvePositionProcess();	
 	if(!r.isActive) {
@@ -99,6 +115,7 @@ void Logic_Process(void){
 		return;
 	};	
 	Work();
+	CorrectTime();
 }
 
 void Logic_Initialise(void){
@@ -106,9 +123,9 @@ void Logic_Initialise(void){
 	Timer_Initialise(&timerPeriod, GetMilliseconds);
 	Timer_Initialise(&timerActiveTime, GetMilliseconds);
 	Timer_Initialise(&timerValveProcess, GetMilliseconds);
+	Timer_Initialise(&timerCorrection, GetMilliseconds);
 	Timer_Start(&timerValveProcess, 2);
 	
-	HAL_TIM_Base_Start(&htim1);
 	HAL_TIM_Base_Start_IT(&htim3);
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
 }
@@ -117,13 +134,17 @@ void Logic_IncrementTime(void){
 	milliseconds++;
 }
 
+int32_t Logic_GetCorrectValue(void){
+	return correctValue;
+}
+
+void Logic_CorrectTimeCmpltClbk(void){
+	correctValue = 0;
+}
+
 static void RestartTimers(void){
-	HAL_TIM_Base_Stop(&htim1);
 	HAL_TIM_Base_Stop_IT(&htim3);
-	__HAL_TIM_SetCounter(&htim1, 0);
 	__HAL_TIM_SetCounter(&htim3, 0);
-	milliseconds = 0;
-	HAL_TIM_Base_Start_IT(&htim1);
 	HAL_TIM_Base_Start_IT(&htim3);
 }
 
@@ -131,10 +152,15 @@ void OnMessageStartReceived(ProtoTransportP pr, MsgStart_t* msg){
 	r.isActive = msg->isStart;
 	if(r.isActive){
 		Timer_Start(&timerActiveTime, r.set.activeTime);
+		Timer_Start(&timerCorrection, r.set.correctPer);
 	}
 }
 
 void OnMessageSettingsReceived(ProtoTransportP pr, MsgSettings_t* msg){
+	if(msg->correctValue > -900 && msg->correctValue < 900)
+		r.set.correctValue = msg->correctValue;
+	else r.set.correctValue = 0;
+	
 	r.set.activeTime = msg->activeTime;
 	r.set.cycleCount = msg->cycleCount;
 	r.set.delayAfter = msg->delayAfter;
@@ -144,6 +170,7 @@ void OnMessageSettingsReceived(ProtoTransportP pr, MsgSettings_t* msg){
 	r.set.angleOn = msg->angleOn;
 	r.set.angleOff = msg->angleOff;
 	r.set.valveStepPer = msg->valveStepPer;
+	r.set.correctPer = msg->correctPer;
 	r.set.isOpenWhenStopped = msg->isOpenWhenStopped;
 	
 	Timer_Start(&timerValveProcess, r.set.valveStepPer);

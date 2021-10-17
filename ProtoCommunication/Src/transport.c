@@ -75,18 +75,6 @@ static void Send(ProtoTransportP pr){
 		pr->itf.clearTx(pr);
 		ProtoTransp_Error(pr, TRP_READ_TX_BUFFER_ERROR);
 	}
-//	else{
-//		if(pr->ctrl.resendCounter++ > pr->cnfg.numberResendAttempts){
-//			pr->itf.clearTx(pr);
-//			ProtoTransp_Error(pr, TRP_SEND_ABORTED);
-//			SendAbort(pr);
-//		}
-//		else{
-//			ProtoTransp_Error(pr, TRP_TX_PERIPHERY_ERROR);
-//			pr->tmt.prevSendTime = pr->itf.getMillis();
-//			if(pr->data != NULL) pr->itf.send(pr, pr->data, pr->len);
-//		}
-//	}
 }
 
 static void Receive(ProtoTransportP pr){
