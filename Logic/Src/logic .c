@@ -73,11 +73,11 @@ static void SetValve(uint8_t _precent){
 }
 //полностью открыть
 static void OpenValve(void){
-	//SetValve(100);
+	SetValve(100);
 }
 //полностью закрыть
 static void CloseValve(void){
-	//SetValve(0);
+	SetValve(0);
 }
 
 static void Work(void){
